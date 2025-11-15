@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import sqlite3
 
 app = Flask(__name__)
 
@@ -8,14 +9,12 @@ def get_users():
     result = []
 
     try:
-        with open("users.txt", "r") as file:
-            for line in file:
-                line = line.strip()
-                if not line or "," not in line:
-                    continue
-                name, birth_year = line.split(",")
-                if int(birth_year) > year:
-                    result.append(name)
+        conn = sqlite3.connect("users.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT Name FROM Users WHERE BirthYear > ?", (year,))
+        rows = cursor.fetchall()
+        result = [row[0] for row in rows]
+        conn.close()
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
